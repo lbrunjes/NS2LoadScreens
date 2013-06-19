@@ -31,24 +31,27 @@ generator.exe ns2_map_name ns2dir
 TO DO:
 show RT,TP, locations on minimap
 ";
-
+		const string mapsDir = "ns2/maps/";
 		const string overviewDir= "ns2/maps/overviews/";
 		const string screensDir = "ns2/screens/";
 		const string screenSrcDir = "/src/";
 
 		static Font bigFont = new Font (FontFamily.GenericSansSerif, 96f);
 //		static Font bigFont = new Font (FontFamily.GenericSansSerif, 94f);
-		static Font minimapFont = new Font(FontFamily.GenericSansSerif, 12f);
+		static Font minimapFont = new Font(FontFamily.GenericSansSerif,14f);
 
 		static int minimapxoffset = 1120;
 		static int minimapyoffset = 0;
 		static int minimapsize =640;
 
+		static Bitmap tp_icon = new Bitmap ("icon_techpoint.png");
+		static Bitmap rt_icon;
+
 		public static void Main (string[] args)
 		{
 
 			String map = "ns2_test";
-			String path = "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Natural Selection 2\\";
+			String path = "C:/Program Files (x86)/Steam/steamapps/common/Natural Selection 2/";
 			Bitmap overview;
 
 			//parse command line args
@@ -74,6 +77,8 @@ Path :{2}
 				return;
 			}
 
+			tp_icon.MakeTransparent ();
+
 			//TODO LOAD FONTS FROM ../core/fonts/
 			//todo see if the font is intsalled
 			PrivateFontCollection pfc = new PrivateFontCollection ();
@@ -82,15 +87,15 @@ Path :{2}
 			if (File.Exists (System.Environment.CurrentDirectory+"/fonts/AgencyFB-Bold.ttf")) {
 				pfc.AddFontFile (System.Environment.CurrentDirectory+"/fonts/AgencyFB-Bold.ttf");
 				bigFont = new Font (pfc.Families [0], 96f);
-				minimapFont = new Font (pfc.Families [0], 14f);
+				minimapFont = new Font (pfc.Families [0], 36f);
 			} else {
-				Console.WriteLine ("Cannot find font sorry");
+				Console.WriteLine ("Cannot find font, using defaults sorry");
 			}
 			//find the minimap file first
 			if(File.Exists(path +overviewDir+ map+".tga")){
 				overview = Paloma.TargaImage.LoadTargaImage(path +overviewDir+ map+".tga");
 				overview.MakeTransparent (overview.GetPixel(1,1));
-				AnnotateOverview (ref overview);
+				AnnotateOverview (ref overview, path+mapsDir+map+".level");
 			}
 			else{
 				Console.WriteLine("Cannot locate overview at:\n "+path +overviewDir+ map+".tga\n Are you sure it exists?");
@@ -143,8 +148,10 @@ Path :{2}
 		
 			}
 			else {
-				Console.Write ("Wdith was 0...");
+				if(tmp.Width ==0){
+				Console.WriteLine (infile+" Width was 0...");
 				return;
+				}
 			}
 
 
@@ -153,20 +160,10 @@ Path :{2}
 			g.CompositingMode = System.Drawing.Drawing2D.CompositingMode.SourceOver;
 			g.DrawImage (overview, new Rectangle (minimapxoffset, minimapyoffset, minimapsize, minimapsize));
 
-
+			g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.AntiAlias;
+		
 			//draw the name of the map
-			GraphicsPath gp = new GraphicsPath ();
-			gp.AddString(mapname.Replace("ns2_","").ToUpper(), 
-				bigFont.FontFamily,
-				(int)FontStyle.Regular,
-				bigFont.Size,
-				new RectangleF(320, 64, 512, 512), new StringFormat());
-			g.FillPath (Brushes.White, gp);
-			g.DrawPath (Pens.Black, gp);
-			/*g.DrawString (mapname.Replace("ns2_","").ToUpper(), 
-			              bigFont,
-			              Brushes.White,
-			              new RectangleF(320, 64, 512, 512));*/
+			drawString (mapname.Replace("ns2_","").ToUpper(), g, bigFont, 320, 64,3);
 
 			g.Flush();
 			//save the output.
@@ -203,7 +200,7 @@ Path :{2}
 
 
 
-		static void AnnotateOverview (ref Bitmap overview)
+		static void AnnotateOverview (ref Bitmap overview, string file)
 		{
 			//TODO
 			/*
@@ -213,16 +210,88 @@ Path :{2}
 			 * iterate the resource towers,
 			 * then we need to iterate the locations and draw the names
 			 */
+			NS2.Tools.Level lvl = new NS2.Tools.Level (file);
+		//	lvl.GetEntitiesWithName ("minimap_extents");
+			Console.WriteLine (lvl.minimap_extents);
+			Console.WriteLine (lvl.Textures.Length+" TEXTures");
 
-			//Graphics g = Graphics.FromImage (overview);
+			Console.WriteLine (lvl.TechPoints.Count+" TP");
+			Console.WriteLine (lvl.Resources.Count+" RT");
+			Console.WriteLine (lvl.Locations.Count+" loc");
 
 
+			Graphics g = Graphics.FromImage (overview);
+
+			//g.DrawLine (Pens.Red, 0, overview.Height / 2, overview.Width, overview.Height / 2);
+			//g.DrawLine (Pens.Red, overview.Width/2, 0, overview.Width/2, overview.Height );
+
+			g.TranslateTransform (overview.Width/2f , overview.Height/2f);
+			g.RotateTransform (-90f);
+			//g.ScaleTransform (overview.Width/(lvl.minimap_extents.Scale.X/2), overview.Width / (lvl.minimap_extents.Scale.Z/2));
+			//g.TranslateTransform (-lvl.minimap_extents.Origin.X, -lvl.minimap_extents.Origin.Z);
+
+
+			//g.DrawLine (Pens.Yellow, -overview.Width, 0, overview.Width, 0);
+			//g.DrawLine (Pens.Yellow, 0, -overview.Height, 0, overview.Height );
+
+
+
+
+			Console.WriteLine ("Scale:"+(overview.Width/lvl.minimap_extents.Scale.X));
+			//g.TranslateTransform (, lvl.minimap_extents.Origin.Y);
+
+
+			//g.FillEllipse (Brushes.Red, lvl.minimap_extents.Origin.X, lvl.minimap_extents.Origin.Z, 10f, 10f);
+			//g.FillEllipse (Brushes.Peru, 0, 0, 10, 10);
+			NS2.Tools.Vector3 vec;
+			g.CompositingMode = System.Drawing.Drawing2D.CompositingMode.SourceOver;
 
 			//Draw techpoints
+			foreach (NS2.Tools.Entity e in lvl.TechPoints) {
+				vec = lvl.minimapLocation (e.Origin, overview.Width);
+	//			Console.WriteLine (e.Origin + " =>" + vec);
+				//g.FillRectangle(Brushes.Gold, e.Origin.X, e.Origin.Z, 8f,8f);
+	//			g.FillRectangle(Brushes.Blue, vec.X-16, vec.Z-16, 32f,32f);
+				g.DrawImage (tp_icon, new RectangleF(vec.X-16f, vec.Z-16f, 32f, 32f));
+
+
+			//	g.FillRectangle
+			}
 
 			//Draw Rts
-			
+		/*	foreach (NS2.Tools.Entity e in lvl.Resources) {
+				vec = lvl.minimapLocation (e.Origin, overview.Width);
+	//			Console.WriteLine (e.Origin + " =>" + vec);
+				g.FillEllipse(Brushes.Red, vec.X-16, vec.Z-16, 32f,32f);
+				//	g.FillRectangle
+			}*/
+			g.RotateTransform (90);
 			//Draw location names
+			foreach (NS2.Tools.Entity e in lvl.Locations) {
+				vec = lvl.minimapLocation (e.Origin, overview.Width);
+		//		Console.WriteLine (e.Origin + " =>" + vec);
+			//	Console.WriteLine (e.Text+ " "+ e.Origin);
+				var size = g.MeasureString (e.Text,minimapFont);
+				drawString (e.Text, g, minimapFont, vec.Z-size.Width/2 +32f, -vec.X-size.Height/2,1);
+				//	g.FillRectangle
+			}
+
+			g.Flush ();
+		}
+
+		public static  void drawString(String text, Graphics g, Font f, float centerx, float centery, float margin){
+			GraphicsPath gp = new GraphicsPath ();
+
+			gp.AddString(text, 
+			             f.FontFamily,
+			             (int)FontStyle.Regular,
+			             f.Size,
+			             new PointF(centerx, centery),
+			             new StringFormat()
+			            );
+			g.FillPath (Brushes.White, gp);
+			g.DrawPath (new Pen(Color.Black, margin), gp);
+
 		}
 	}
 }
