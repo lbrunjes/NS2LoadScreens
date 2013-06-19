@@ -91,16 +91,24 @@ Path :{2}
 			} else {
 				Console.WriteLine ("Cannot find font, using defaults sorry");
 			}
+
+
 			//find the minimap file first
 			if(File.Exists(path +overviewDir+ map+".tga")){
 				overview = Paloma.TargaImage.LoadTargaImage(path +overviewDir+ map+".tga");
 				overview.MakeTransparent (overview.GetPixel(1,1));
 				AnnotateOverview (ref overview, path+mapsDir+map+".level");
+
+				//Check to make sure the map has not been saved since the minimap was created
+				if(File.GetLastWriteTimeUtc(path +overviewDir+ map+".tga") < File.GetLastWriteTimeUtc(path+ mapsDir+map+".level")){
+					Console.WriteLine ("WARNING: Level file updated more recently than overview");
+				}
 			}
 			else{
 				Console.WriteLine("Cannot locate overview at:\n "+path +overviewDir+ map+".tga\n Are you sure it exists?");
 				return;
 			}
+		
 
 			//find the output dir
 			if(!Directory.Exists(path+screensDir+map)){
@@ -109,6 +117,7 @@ Path :{2}
 
 			//list of files to read
 			String[] toUse;
+
 
 
 			if(!Directory.Exists(path+screensDir+map+screenSrcDir)){
@@ -210,8 +219,9 @@ Path :{2}
 			 * iterate the resource towers,
 			 * then we need to iterate the locations and draw the names
 			 */
+
 			NS2.Tools.Level lvl = new NS2.Tools.Level (file);
-		//	lvl.GetEntitiesWithName ("minimap_extents");
+
 			Console.WriteLine (lvl.minimap_extents);
 			Console.WriteLine (lvl.Textures.Length+" TEXTures");
 
@@ -222,40 +232,20 @@ Path :{2}
 
 			Graphics g = Graphics.FromImage (overview);
 
-			//g.DrawLine (Pens.Red, 0, overview.Height / 2, overview.Width, overview.Height / 2);
-			//g.DrawLine (Pens.Red, overview.Width/2, 0, overview.Width/2, overview.Height );
-
 			g.TranslateTransform (overview.Width/2f , overview.Height/2f);
 			g.RotateTransform (-90f);
-			//g.ScaleTransform (overview.Width/(lvl.minimap_extents.Scale.X/2), overview.Width / (lvl.minimap_extents.Scale.Z/2));
-			//g.TranslateTransform (-lvl.minimap_extents.Origin.X, -lvl.minimap_extents.Origin.Z);
 
+			//Console.WriteLine ("Scale:"+(overview.Width/lvl.minimap_extents.Scale.X));
 
-			//g.DrawLine (Pens.Yellow, -overview.Width, 0, overview.Width, 0);
-			//g.DrawLine (Pens.Yellow, 0, -overview.Height, 0, overview.Height );
-
-
-
-
-			Console.WriteLine ("Scale:"+(overview.Width/lvl.minimap_extents.Scale.X));
-			//g.TranslateTransform (, lvl.minimap_extents.Origin.Y);
-
-
-			//g.FillEllipse (Brushes.Red, lvl.minimap_extents.Origin.X, lvl.minimap_extents.Origin.Z, 10f, 10f);
-			//g.FillEllipse (Brushes.Peru, 0, 0, 10, 10);
 			NS2.Tools.Vector3 vec;
 			g.CompositingMode = System.Drawing.Drawing2D.CompositingMode.SourceOver;
 
 			//Draw techpoints
 			foreach (NS2.Tools.Entity e in lvl.TechPoints) {
 				vec = lvl.minimapLocation (e.Origin, overview.Width);
-	//			Console.WriteLine (e.Origin + " =>" + vec);
-				//g.FillRectangle(Brushes.Gold, e.Origin.X, e.Origin.Z, 8f,8f);
+	//			//g.FillRectangle(Brushes.Gold, e.Origin.X, e.Origin.Z, 8f,8f);
 	//			g.FillRectangle(Brushes.Blue, vec.X-16, vec.Z-16, 32f,32f);
 				g.DrawImage (tp_icon, new RectangleF(vec.X-16f, vec.Z-16f, 32f, 32f));
-
-
-			//	g.FillRectangle
 			}
 
 			//Draw Rts
@@ -269,8 +259,6 @@ Path :{2}
 			//Draw location names
 			foreach (NS2.Tools.Entity e in lvl.Locations) {
 				vec = lvl.minimapLocation (e.Origin, overview.Width);
-		//		Console.WriteLine (e.Origin + " =>" + vec);
-			//	Console.WriteLine (e.Text+ " "+ e.Origin);
 				var size = g.MeasureString (e.Text,minimapFont);
 				drawString (e.Text, g, minimapFont, vec.Z-size.Width/2 +32f, -vec.X-size.Height/2,1);
 				//	g.FillRectangle
@@ -282,13 +270,11 @@ Path :{2}
 		public static  void drawString(String text, Graphics g, Font f, float centerx, float centery, float margin){
 			GraphicsPath gp = new GraphicsPath ();
 
-			gp.AddString(text, 
-			             f.FontFamily,
-			             (int)FontStyle.Regular,
-			             f.Size,
+			gp.AddString(text, f.FontFamily,
+			             (int)FontStyle.Regular, f.Size,
 			             new PointF(centerx, centery),
-			             new StringFormat()
-			            );
+			             new StringFormat());
+
 			g.FillPath (Brushes.White, gp);
 			g.DrawPath (new Pen(Color.Black, margin), gp);
 
