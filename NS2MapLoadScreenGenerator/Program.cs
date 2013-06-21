@@ -26,7 +26,7 @@ and outputs jpegs with the screen and the minimap to:
 ns2\screens\%map%
 
 use:
-generator.exe ns2_map_name ns2dir
+generator.exe ns2_map_name [font] [refreshMinimap]
 
 TO DO:
 show RT,TP, locations on minimap
@@ -35,10 +35,11 @@ show RT,TP, locations on minimap
 		const string overviewDir= "ns2/maps/overviews/";
 		const string screensDir = "ns2/screens/";
 		const string screenSrcDir = "/src/";
-
-		static Font bigFont = new Font (FontFamily.GenericSansSerif, 96f);
+		const float bigFontSize = 96f;
+		const float minimapFontSize = 32f;
+		static Font bigFont = new Font (FontFamily.GenericSansSerif, bigFontSize);
 //		static Font bigFont = new Font (FontFamily.GenericSansSerif, 94f);
-		static Font minimapFont = new Font(FontFamily.GenericSansSerif,14f);
+		static Font minimapFont = new Font(FontFamily.GenericSansSerif,minimapFontSize);
 
 		static int minimapxoffset = 1120;
 		static int minimapyoffset = 0;
@@ -47,20 +48,28 @@ show RT,TP, locations on minimap
 		static Bitmap tp_icon = new Bitmap ("icon_techpoint.png");
 		static Bitmap rt_icon;
 
+
 		public static void Main (string[] args)
 		{
 
+			bool refreshMinimap = false;
+
 			String map = "ns2_test";
-			String path = "C:/Program Files (x86)/Steam/steamapps/common/Natural Selection 2/";
+			String path = "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Natural Selection 2\\";
+			String font = "AgencyFB-Regular";
 			Bitmap overview;
 
-			//parse command line args
+			#region parse command line args & load things
 			if (args.Length > 0) {
-				map= args[0];
+				map= args[0].Replace(".level","");
 			}
 
 			if (args.Length > 1) {
-				path= args[1];
+				font= args[1];
+			}
+
+			if(args.Length > 2){
+				refreshMinimap = args[2].ToLower() == "true" || args[2].ToLower()=="yes";
 			}
 			Console.WriteLine (String.Format(@"NS2 Map Load Screen generator
 ---------------------------------
@@ -78,20 +87,32 @@ Path :{2}
 			}
 
 			tp_icon.MakeTransparent ();
+			#endregion
 
-			//TODO LOAD FONTS FROM ../core/fonts/
-			//todo see if the font is intsalled
-			PrivateFontCollection pfc = new PrivateFontCollection ();
+			#region check fonts
+			bool fontFound = false;
 
-
-			if (File.Exists (System.Environment.CurrentDirectory+"/fonts/AgencyFB-Bold.ttf")) {
-				pfc.AddFontFile (System.Environment.CurrentDirectory+"/fonts/AgencyFB-Bold.ttf");
-				bigFont = new Font (pfc.Families [0], 96f);
-				minimapFont = new Font (pfc.Families [0], 36f);
-			} else {
-				Console.WriteLine ("Cannot find font, using defaults sorry");
+			InstalledFontCollection ifc = new InstalledFontCollection ();
+			foreach (FontFamily fontfamily in ifc.Families) {
+				if (fontfamily.Name == font) {
+					bigFont = new Font (fontfamily, 96f);
+					minimapFont = new Font (fontfamily, 36f);
+					fontFound = false;
+				}
 			}
+			if (!fontFound) {
+				PrivateFontCollection pfc = new PrivateFontCollection ();
 
+
+				if (File.Exists (System.Environment.CurrentDirectory+"/fonts/AgencyFB-Bold.ttf")) {
+					pfc.AddFontFile (System.Environment.CurrentDirectory+"/fonts/AgencyFB-Bold.ttf");
+					bigFont = new Font (pfc.Families [0], bigFontSize);
+					minimapFont = new Font (pfc.Families [0], minimapFontSize);
+				} else {
+					Console.WriteLine ("Cannot find font, using defaults sorry");
+				}
+			}
+			#endregion
 
 			//find the minimap file first
 			if(File.Exists(path +overviewDir+ map+".tga")){
@@ -102,6 +123,9 @@ Path :{2}
 				//Check to make sure the map has not been saved since the minimap was created
 				if(File.GetLastWriteTimeUtc(path +overviewDir+ map+".tga") < File.GetLastWriteTimeUtc(path+ mapsDir+map+".level")){
 					Console.WriteLine ("WARNING: Level file updated more recently than overview");
+					if (refreshMinimap && File.Exists("minimap.exe")) {
+						System.Diagnostics.Process.Start ("minimap.exe", map);
+					}
 				}
 			}
 			else{
@@ -117,8 +141,6 @@ Path :{2}
 
 			//list of files to read
 			String[] toUse;
-
-
 
 			if(!Directory.Exists(path+screensDir+map+screenSrcDir)){
 				Console.WriteLine("Using generic screenshots");
@@ -174,6 +196,11 @@ Path :{2}
 			//draw the name of the map
 			drawString (mapname.Replace("ns2_","").ToUpper(), g, bigFont, 320, 64,3);
 
+			//draw the hint box at teh bottom
+			Color semitransparent = Color.FromArgb (128, 0, 0, 0);
+			g.FillRectangle (new SolidBrush(semitransparent), new Rectangle (0, tmp.Height - 100, tmp.Width, 99));
+
+
 			g.Flush();
 			//save the output.
 			tmp.Save (String.Format("{0}/{1}.jpg",path,id));
@@ -200,9 +227,25 @@ Path :{2}
 			g.SmoothingMode =  System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
 
 
-
+			//draw the tip window
 			g.FillRectangle(new SolidBrush(Color.Black), new Rectangle(0, 0, outImg.Width, outImg.Height));
 			g.DrawImage(img, new Rectangle(0,0, outImg.Width, outImg.Height));
+
+			//draw teh vingette effect
+		
+			LinearGradientBrush gradientbrush1 = new LinearGradientBrush (
+				new Rectangle (0, 0, 100, outImg.Height - 100),
+				Color.FromArgb (255, 0, 0, 0),
+				Color.FromArgb (0, 0, 0, 0),
+				LinearGradientMode.Horizontal);
+			LinearGradientBrush gradientbrush2 = new LinearGradientBrush (
+				new Rectangle (outImg.Width-150, 0, 150, outImg.Height - 100),
+				Color.FromArgb (0, 0, 0, 0),
+				Color.FromArgb (255, 0, 0, 0),
+				LinearGradientMode.Horizontal);
+			g.FillRectangle (gradientbrush1, 0, 0, 100, outImg.Height - 100);
+			g.FillRectangle (gradientbrush2, outImg.Width-150, 0, 150, outImg.Height - 100);
+			g.Flush ();
 
 			return outImg;
 		}
@@ -231,6 +274,7 @@ Path :{2}
 
 
 			Graphics g = Graphics.FromImage (overview);
+			g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.AntiAlias;
 
 			g.TranslateTransform (overview.Width/2f , overview.Height/2f);
 			g.RotateTransform (-90f);
@@ -249,6 +293,7 @@ Path :{2}
 			}
 
 			//Draw Rts
+			//REMOVED FOR NOW.
 		/*	foreach (NS2.Tools.Entity e in lvl.Resources) {
 				vec = lvl.minimapLocation (e.Origin, overview.Width);
 	//			Console.WriteLine (e.Origin + " =>" + vec);
@@ -267,6 +312,16 @@ Path :{2}
 			g.Flush ();
 		}
 
+
+		/// <summary>
+		/// Draws the string to teh graphics context with an outline.
+		/// </summary>
+		/// <param name="text">Text.</param>
+		/// <param name="g">The green component.</param>
+		/// <param name="f">F.</param>
+		/// <param name="centerx">Centerx.</param>
+		/// <param name="centery">Centery.</param>
+		/// <param name="margin">Margin.</param>
 		public static  void drawString(String text, Graphics g, Font f, float centerx, float centery, float margin){
 			GraphicsPath gp = new GraphicsPath ();
 
@@ -276,7 +331,9 @@ Path :{2}
 			             new StringFormat());
 
 			g.FillPath (Brushes.White, gp);
-			g.DrawPath (new Pen(Color.Black, margin), gp);
+			if (margin >= 1) {
+				g.DrawPath (new Pen(Color.Black, margin), gp);
+			}
 
 		}
 	}
