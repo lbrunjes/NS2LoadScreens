@@ -194,12 +194,33 @@ Path :{2}
 			g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.AntiAlias;
 		
 			//draw the name of the map
-			drawString (mapname.Replace("ns2_","").ToUpper(), g, bigFont, 320, 64,3);
+			drawString (mapname.Replace("ns2_","").ToUpper(), g, bigFont, 320, 64,2.1f,6);
 
 			//draw the hint box at teh bottom
 			Color semitransparent = Color.FromArgb (128, 0, 0, 0);
 			g.FillRectangle (new SolidBrush(semitransparent), new Rectangle (0, tmp.Height - 100, tmp.Width, 99));
+		
+			//draw teh vingette effect
 
+			LinearGradientBrush gradientbrush1 = new LinearGradientBrush (
+				new Rectangle (0, 0, 101, tmp.Height),
+				Color.FromArgb (255, 0, 0, 0),
+				Color.FromArgb (0, 0, 0, 0),
+				LinearGradientMode.Horizontal);
+			LinearGradientBrush gradientbrush2 = new LinearGradientBrush (
+				new Rectangle (tmp.Width-150, 0, 150, tmp.Height),
+				Color.FromArgb (0, 0, 0, 0),
+				Color.FromArgb (255, 0, 0, 0),
+				LinearGradientMode.Horizontal);
+			LinearGradientBrush gradientbrush3 = new LinearGradientBrush (
+				new Rectangle (0, 0, tmp.Width,50),
+				Color.FromArgb (255, 0, 0, 0),
+				Color.FromArgb (0, 0, 0, 0),
+				LinearGradientMode.Vertical);
+			g.FillRectangle (gradientbrush1, 0, 0, 100, tmp.Height - 100);
+			g.FillRectangle (gradientbrush2, tmp.Width-150, 0, 150, tmp.Height);
+			g.FillRectangle (gradientbrush3, 0, 0, tmp.Width, 50);
+			g.Flush ();
 
 			g.Flush();
 			//save the output.
@@ -226,26 +247,11 @@ Path :{2}
 			g.CompositingQuality = System.Drawing.Drawing2D.CompositingQuality.HighQuality;
 			g.SmoothingMode =  System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
 
-
 			//draw the tip window
 			g.FillRectangle(new SolidBrush(Color.Black), new Rectangle(0, 0, outImg.Width, outImg.Height));
 			g.DrawImage(img, new Rectangle(0,0, outImg.Width, outImg.Height));
 
-			//draw teh vingette effect
-		
-			LinearGradientBrush gradientbrush1 = new LinearGradientBrush (
-				new Rectangle (0, 0, 100, outImg.Height - 100),
-				Color.FromArgb (255, 0, 0, 0),
-				Color.FromArgb (0, 0, 0, 0),
-				LinearGradientMode.Horizontal);
-			LinearGradientBrush gradientbrush2 = new LinearGradientBrush (
-				new Rectangle (outImg.Width-150, 0, 150, outImg.Height - 100),
-				Color.FromArgb (0, 0, 0, 0),
-				Color.FromArgb (255, 0, 0, 0),
-				LinearGradientMode.Horizontal);
-			g.FillRectangle (gradientbrush1, 0, 0, 100, outImg.Height - 100);
-			g.FillRectangle (gradientbrush2, outImg.Width-150, 0, 150, outImg.Height - 100);
-			g.Flush ();
+
 
 			return outImg;
 		}
@@ -305,7 +311,7 @@ Path :{2}
 			foreach (NS2.Tools.Entity e in lvl.Locations) {
 				vec = lvl.minimapLocation (e.Origin, overview.Width);
 				var size = g.MeasureString (e.Text,minimapFont);
-				drawString (e.Text, g, minimapFont, vec.Z-size.Width/2 +32f, -vec.X-size.Height/2,1);
+				drawString (e.Text, g, minimapFont, vec.Z-size.Width/2 , -vec.X-size.Height/2,1,0);
 				//	g.FillRectangle
 			}
 
@@ -322,13 +328,20 @@ Path :{2}
 		/// <param name="centerx">Centerx.</param>
 		/// <param name="centery">Centery.</param>
 		/// <param name="margin">Margin.</param>
-		public static  void drawString(String text, Graphics g, Font f, float centerx, float centery, float margin){
+		public static  void drawString(String text, Graphics g, Font f, float centerx, float centery, float margin, float glowWidth){
 			GraphicsPath gp = new GraphicsPath ();
 
 			gp.AddString(text, f.FontFamily,
 			             (int)FontStyle.Regular, f.Size,
 			             new PointF(centerx, centery),
 			             new StringFormat());
+
+			if (glowWidth > 0) {
+				for (int i = 0; i < glowWidth*2; i++) {
+					g.DrawPath (new Pen (Color.FromArgb(10,255,255,255), i),gp);
+				}
+
+			}
 
 			g.FillPath (Brushes.White, gp);
 			if (margin >= 1) {

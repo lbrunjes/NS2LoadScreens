@@ -9,7 +9,7 @@
 	
 	
 	Usage
-		 ns2MapLoadScreenGenerator.exe name_of_map [path to root]
+		 ns2MapLoadScreenGenerator.exe name_of_map [font] [generate new minimap]
 		 
 		 it looks at the following files:
 		 	path/ns2/maps/name_of_map.level -parsed for entites
@@ -22,8 +22,7 @@
 		no vignette effect on screenshots.
 		
 	ToDo:
-		support randomizing the random map
-		support executing the minimap generator if needed
+		support randomizing the random generic screenshoot
 		not have the worlds worst level parser.
 		
 	Thanks to:
