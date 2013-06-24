@@ -117,7 +117,7 @@ namespace NS2.Tools
 			}
 
 			//at this point there ix xml data.
-			Console.WriteLine ("XML Begins at " +idx.ToString("x"));
+		//	Console.WriteLine ("XML Begins at " +idx.ToString("x"));
 
 			//todo get this xml document
 

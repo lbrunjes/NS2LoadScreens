@@ -35,8 +35,8 @@ show RT,TP, locations on minimap
 		const string overviewDir= "ns2/maps/overviews/";
 		const string screensDir = "ns2/screens/";
 		const string screenSrcDir = "/src/";
-		const float bigFontSize = 96f;
-		const float minimapFontSize = 32f;
+		const float bigFontSize = 72f;
+		const float minimapFontSize = 28f;
 		static Font bigFont = new Font (FontFamily.GenericSansSerif, bigFontSize);
 //		static Font bigFont = new Font (FontFamily.GenericSansSerif, 94f);
 		static Font minimapFont = new Font(FontFamily.GenericSansSerif,minimapFontSize);
@@ -114,6 +114,7 @@ Path :{2}
 			}
 			#endregion
 
+			#region Find and generate anotated overview
 			//find the minimap file first
 			if(File.Exists(path +overviewDir+ map+".tga")){
 				overview = Paloma.TargaImage.LoadTargaImage(path +overviewDir+ map+".tga");
@@ -123,8 +124,8 @@ Path :{2}
 				//Check to make sure the map has not been saved since the minimap was created
 				if(File.GetLastWriteTimeUtc(path +overviewDir+ map+".tga") < File.GetLastWriteTimeUtc(path+ mapsDir+map+".level")){
 					Console.WriteLine ("WARNING: Level file updated more recently than overview");
-					if (refreshMinimap && File.Exists("minimap.exe")) {
-						System.Diagnostics.Process.Start ("minimap.exe", map);
+					if (refreshMinimap && File.Exists("overview.exe")) {
+						System.Diagnostics.Process.Start ("overview.exe", path +mapsDir+map+".level");
 					}
 				}
 			}
@@ -132,7 +133,7 @@ Path :{2}
 				Console.WriteLine("Cannot locate overview at:\n "+path +overviewDir+ map+".tga\n Are you sure it exists?");
 				return;
 			}
-		
+			#endregion
 
 			//find the output dir
 			if(!Directory.Exists(path+screensDir+map)){
@@ -213,7 +214,7 @@ Path :{2}
 				Color.FromArgb (255, 0, 0, 0),
 				LinearGradientMode.Horizontal);
 			LinearGradientBrush gradientbrush3 = new LinearGradientBrush (
-				new Rectangle (0, 0, tmp.Width,50),
+				new Rectangle (0, 0, tmp.Width,51),
 				Color.FromArgb (255, 0, 0, 0),
 				Color.FromArgb (0, 0, 0, 0),
 				LinearGradientMode.Vertical);
@@ -311,7 +312,7 @@ Path :{2}
 			foreach (NS2.Tools.Entity e in lvl.Locations) {
 				vec = lvl.minimapLocation (e.Origin, overview.Width);
 				var size = g.MeasureString (e.Text,minimapFont);
-				drawString (e.Text, g, minimapFont, vec.Z-size.Width/2 , -vec.X-size.Height/2,1,0);
+				drawString (e.Text, g, minimapFont, vec.Z-size.Width/2 + 32f , -vec.X-size.Height/2,1,0);
 				//	g.FillRectangle
 			}
 
@@ -329,24 +330,32 @@ Path :{2}
 		/// <param name="centery">Centery.</param>
 		/// <param name="margin">Margin.</param>
 		public static  void drawString(String text, Graphics g, Font f, float centerx, float centery, float margin, float glowWidth){
+			float scalingfortext = 395f / 300f;
+			g.SmoothingMode = SmoothingMode.AntiAlias;
 			GraphicsPath gp = new GraphicsPath ();
 
 			gp.AddString(text, f.FontFamily,
-			             (int)FontStyle.Regular, f.Size,
+			             (int)FontStyle.Regular,
+			             f.Size*scalingfortext,
 			             new PointF(centerx, centery),
 			             new StringFormat());
 
 			if (glowWidth > 0) {
 				for (int i = 0; i < glowWidth*2; i++) {
-					g.DrawPath (new Pen (Color.FromArgb(10,255,255,255), i),gp);
+					g.DrawPath (new Pen (Color.FromArgb(16,255,255,255), i),gp);
 				}
 
 			}
-
-			g.FillPath (Brushes.White, gp);
 			if (margin >= 1) {
-				g.DrawPath (new Pen(Color.Black, margin), gp);
+				g.DrawPath (new Pen(Color.Black, margin*2), gp);
+				g.FillPath (Brushes.Black, gp);
 			}
+			g.FillPath (Brushes.White, gp);
+		
+			/*g.DrawString (text, new Font(f.FontFamily, f.Size+margin), Brushes.Black, new PointF (centerx-margin, centery));
+
+			g.DrawString (text, f, Brushes.White, new PointF (centerx-1, centery));*/
+
 
 		}
 	}
