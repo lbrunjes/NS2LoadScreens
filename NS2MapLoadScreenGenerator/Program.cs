@@ -348,7 +348,7 @@ update minimap:{3}
 						i = 0;
 					}
 				}
-				g.DrawRectangle (Pens.Red, box.X, box.Y, box.Width, box.Height);
+		//		g.DrawRectangle (Pens.Red, box.X, box.Y, box.Width, box.Height);
 
 				drawString (e.Text, g, minimapFont, box.X, box.Y,1,0);
 				textBlocks.Add (box);
