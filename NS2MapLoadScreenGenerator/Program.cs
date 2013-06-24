@@ -139,14 +139,13 @@ update minimap:{3}
 					Console.WriteLine ("WARNING: Level file updated more recently than overview");
 					if (refreshMinimap && File.Exists("Overview.exe")) {
 						Console.WriteLine("running: Overview.exe "+ path +mapsDir+map+".level "+path+overviewDir);
-						System.Diagnostics.Process oProc = new System.Diagnostics.Process();
-						oProc.StartInfo = new System.Diagnostics.ProcessStartInfo("Overview.exe", 
+						System.Diagnostics.Process oProc =System.Diagnostics.Process.Start("Overview.exe", 
 						                                                          string.Format("\"{0}\" \"{1}\"",
 						              path+mapsDir+map+".level"
 						              ,"ns2"));
 
 						oProc.WaitForExit();
-						oProc.Start();
+
 					}
 					else{
 							if(refreshMinimap){
@@ -340,15 +339,54 @@ update minimap:{3}
 			foreach (NS2.Tools.Entity e in lvl.Locations) {
 				vec = lvl.minimapLocation (e.Origin, overview.Width);
 				var size = g.MeasureString (e.Text,minimapFont);
-				RectangleF box = new RectangleF (vec.Z-size.Width/2+ 32, -vec.X - size.Height / 2, size.Width, size.Height);
+
+				int startX=(int)(vec.Z-size.Width/2);
+				int startY=(int)( -vec.X - size.Height / 2);
+				int lastAdjust = 0;
+				RectangleF box = new RectangleF (startX,startY, size.Width, size.Height);
 
 				for(int  i = 0; i <textBlocks.Count ;i++) {
 					if (textBlocks[i].IntersectsWith (box)) {
-						box.Y -= 1;
+
+						if (lastAdjust == 0) {
+					
+							box.Y -= 1;
+						} else if (lastAdjust == 1) {
+							box.Y += 1;
+						} else if (lastAdjust == 2) {
+							box.X -= 1;
+						} else if (lastAdjust>=3){
+							box.X+=1;
+						}
 						i = 0;
+						if(lastAdjust == 0 && startY > box.Y + box.Height)
+						{
+							lastAdjust =1;
+							box.Y = startY;
+						}
+						if(lastAdjust == 1 && startY < box.Y - box.Height)
+						{
+							lastAdjust =2;
+							box.Y = startY;
+						}
+						if(lastAdjust == 2 && startX > box.X - box.Height)
+						{
+							lastAdjust =3;
+							box.X = startY;
+						}
+						if(lastAdjust == 3 && startX < box.X - box.Height)
+						{
+							lastAdjust =4;
+							i += textBlocks.Count;
+							box.X=startX;
+							box.Y= startY;
+				
+							Console.WriteLine("I hope "+e.Text+" is not overlapping");
+						}
+
 					}
 				}
-		//		g.DrawRectangle (Pens.Red, box.X, box.Y, box.Width, box.Height);
+				//g.DrawRectangle (Pens.Red, box.X, box.Y, box.Width, box.Height);
 
 				drawString (e.Text, g, minimapFont, box.X, box.Y,1,0);
 				textBlocks.Add (box);
