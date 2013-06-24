@@ -1,5 +1,5 @@
 
-N2 Load Screens
+#N2 Load Screens
 
 This is a tool to generate map screenshots for the loading screen for maps in ns2. That way every one wins.
 
@@ -13,21 +13,22 @@ it looks at the following files:
  	overview.exe - if minimaps are to be refreshed
 
 
-Usage:
+###Usage:
 	ns2MapLoadScreenGenerator.exe name_of_map [font] [generate new minimap]
-Examples: 
+###Examples: 
 	ns2MapLoadScreenGenerator.exe ns2_tram impact true
 	ns2MapLoadScreenGenerator.exe ns2_descent (implies the default font and to generate a new minimap if needed)
 	 
 
-Known issues:
+###Known issues:
 	????
 
-ToDo:
+###ToDo:
 	support randomizing the random generic screenshoot
-	not have the worlds worst level parser.
+	not have the worlds worst level parse
 	
-Thanks to:
+###Thanks to:
 
 	http://www.codeproject.com/Articles/31702/NET-Targa-Image-Reader
-	https://github.com/DamienHauta
+	
+	https://github.com/DamienHauta for having a signinficantly better level parser than me.
