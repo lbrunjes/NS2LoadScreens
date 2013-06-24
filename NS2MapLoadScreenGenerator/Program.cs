@@ -27,11 +27,11 @@ generator.exe ns2_map_name [font] [refreshMinimap]
 TO DO:
 show RT,TP, locations on minimap
 ";
-		const string fontDir = "core/fonts/";
-		const string mapsDir = "ns2/maps/";
-		const string overviewDir= "ns2/maps/overviews/";
-		const string screensDir = "ns2/screens/";
-		const string screenSrcDir = "/src/";
+		const string fontDir = "core\\fonts\\";
+		const string mapsDir = "ns2\\maps\\";
+		const string overviewDir= "ns2\\maps/overviews\\";
+		const string screensDir = "ns2\\screens\\";
+		const string screenSrcDir = "\\src\\";
 		const float bigFontSize = 72f;
 		const float minimapFontSize = 28f;
 		static Font bigFont = new Font (FontFamily.GenericSansSerif, bigFontSize);
@@ -52,7 +52,7 @@ show RT,TP, locations on minimap
 			bool refreshMinimap = false;
 
 			String map = "ns2_test";
-			String path = "";//C:\\Program Files (x86)\\Steam\\steamapps\\common\\Natural Selection 2\\";
+			String path = Environment.CurrentDirectory+"\\";
 			String font = "AgencyFB-R";
 			Bitmap overview;
 
@@ -132,11 +132,21 @@ update minimap:{3}
 				//Check to make sure the map has not been saved since the minimap was created
 				if(File.GetLastWriteTimeUtc(path +overviewDir+ map+".tga") < File.GetLastWriteTimeUtc(path+ mapsDir+map+".level")){
 					Console.WriteLine ("WARNING: Level file updated more recently than overview");
-					if (refreshMinimap && File.Exists("overview.exe")) {
-						System.Diagnostics.Process.Start ("overview.exe", path +mapsDir+map+".level");
+					if (refreshMinimap && File.Exists("Overview.exe")) {
+						Console.WriteLine("running: Overview.exe "+ path +mapsDir+map+".level "+path+overviewDir);
+						System.Diagnostics.Process oProc = new System.Diagnostics.Process();
+						oProc.StartInfo = new System.Diagnostics.ProcessStartInfo("Overview.exe", 
+						                                                          string.Format("\"{0}\" \"{1}\"",
+						              path+mapsDir+map+".level"
+						              ,"ns2"));
+
+						oProc.WaitForExit();
+						oProc.Start();
 					}
 					else{
+							if(refreshMinimap){
 						Console.WriteLine("Not in same directory as overview generator. Ignoring");
+							}
 					}
 				}
 			}
