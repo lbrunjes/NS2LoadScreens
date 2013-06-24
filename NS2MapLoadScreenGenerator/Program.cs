@@ -19,11 +19,7 @@ namespace NS2MapLoadScreenGenerator
 	class MainClass
 	{
 		public static String instructions = @" 
-This take a map name, and a path it then loads the minimap for the
-relvevant directory:ns2\maps\overviews. It attaches the minimap 
-to screenshot jpgs found inns2\screens or ns2\screens\%map%\src
-and outputs jpegs with the screen and the minimap to:
-ns2\screens\%map%
+Generates loading screens from and ns2 map.
 
 use:
 generator.exe ns2_map_name [font] [refreshMinimap]
@@ -31,6 +27,7 @@ generator.exe ns2_map_name [font] [refreshMinimap]
 TO DO:
 show RT,TP, locations on minimap
 ";
+		const string fontDir = "core/fonts/";
 		const string mapsDir = "ns2/maps/";
 		const string overviewDir= "ns2/maps/overviews/";
 		const string screensDir = "ns2/screens/";
@@ -45,7 +42,7 @@ show RT,TP, locations on minimap
 		static int minimapsize =640;
 
 		static Bitmap tp_icon = new Bitmap ("icon_techpoint.png");
-		static Bitmap rt_icon = new Bitmap ();
+		static Bitmap rt_icon;// = new Bitmap ();
 
 
 		public static void Main (string[] args)
@@ -55,7 +52,7 @@ show RT,TP, locations on minimap
 
 			String map = "ns2_test";
 			String path = "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Natural Selection 2\\";
-			String font = "AgencyFB-Regular";
+			String font = "AgencyFB-Bold";
 			Bitmap overview;
 
 			#region parse command line args & load things
@@ -75,11 +72,13 @@ show RT,TP, locations on minimap
  {0}
 
 Level:{1}
-Path :{2}
+font :{2}
+update minimap:{3}
 ---------------------------------",
 			                                instructions, 
 			                                 map,
-			                                 path));
+			                                 font,
+			                                 refreshMinimap));
 			// if we aint got a mp no point in going forward.
 			if(map == ""){
 				return;
@@ -103,8 +102,8 @@ Path :{2}
 				PrivateFontCollection pfc = new PrivateFontCollection ();
 
 
-				if (File.Exists (System.Environment.CurrentDirectory+"/fonts/AgencyFB-Bold.ttf")) {
-					pfc.AddFontFile (System.Environment.CurrentDirectory+"/fonts/AgencyFB-Bold.ttf");
+				if (File.Exists (path+fontDir+font+".ttf")) {
+					pfc.AddFontFile (path+fontDir+font+".ttf");
 					bigFont = new Font (pfc.Families [0], bigFontSize);
 					minimapFont = new Font (pfc.Families [0], minimapFontSize);
 				} else {
@@ -125,6 +124,9 @@ Path :{2}
 					Console.WriteLine ("WARNING: Level file updated more recently than overview");
 					if (refreshMinimap && File.Exists("overview.exe")) {
 						System.Diagnostics.Process.Start ("overview.exe", path +mapsDir+map+".level");
+					}
+					else{
+						Console.WriteLine("Not in same directory as overview generator. Ignoring");
 					}
 				}
 			}

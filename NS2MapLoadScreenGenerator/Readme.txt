@@ -8,6 +8,7 @@
 	
 	
 	
+	
 	Usage
 		 ns2MapLoadScreenGenerator.exe name_of_map [font] [generate new minimap]
 		 
