@@ -41,18 +41,19 @@ show RT,TP, locations on minimap
 		static int minimapyoffset = 0;
 		static int minimapsize =640;
 
-		static Bitmap tp_icon = new Bitmap ("icon_techpoint.png");
+		static Bitmap tp_icon;
 		static Bitmap rt_icon;// = new Bitmap ();
 
 
 		public static void Main (string[] args)
 		{
 
+
 			bool refreshMinimap = false;
 
 			String map = "ns2_test";
-			String path = "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Natural Selection 2\\";
-			String font = "AgencyFB-Bold";
+			String path = "";//C:\\Program Files (x86)\\Steam\\steamapps\\common\\Natural Selection 2\\";
+			String font = "AgencyFB-R";
 			Bitmap overview;
 
 			#region parse command line args & load things
@@ -83,7 +84,16 @@ update minimap:{3}
 			if(map == ""){
 				return;
 			}
+			if(File.Exists("icon_techpoint.png")){
+				tp_icon = new Bitmap ("icon_techpoint.png");
+			}
+			else{
+				Console.WriteLine ("WARNING: Cannot load techpoint Icon");
+				tp_icon = new Bitmap(20,20);
+				Graphics g = Graphics.FromImage(tp_icon);
+				g.FillRectangle(Brushes.Orange, 0,0,19,19);
 
+			}
 			tp_icon.MakeTransparent ();
 			#endregion
 
