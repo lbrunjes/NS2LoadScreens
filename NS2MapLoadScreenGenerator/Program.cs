@@ -38,7 +38,6 @@ show RT,TP, locations on minimap
 		const float bigFontSize = 72f;
 		const float minimapFontSize = 28f;
 		static Font bigFont = new Font (FontFamily.GenericSansSerif, bigFontSize);
-//		static Font bigFont = new Font (FontFamily.GenericSansSerif, 94f);
 		static Font minimapFont = new Font(FontFamily.GenericSansSerif,minimapFontSize);
 
 		static int minimapxoffset = 1120;
@@ -46,7 +45,7 @@ show RT,TP, locations on minimap
 		static int minimapsize =640;
 
 		static Bitmap tp_icon = new Bitmap ("icon_techpoint.png");
-		static Bitmap rt_icon;
+		static Bitmap rt_icon = new Bitmap ();
 
 
 		public static void Main (string[] args)
