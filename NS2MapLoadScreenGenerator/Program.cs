@@ -13,6 +13,7 @@ using System.Drawing;
 using System.Drawing.Text;
 using System.IO;
 using System.Drawing.Drawing2D;
+using System.Collections.Generic;
 
 namespace NS2MapLoadScreenGenerator
 {
@@ -33,7 +34,7 @@ show RT,TP, locations on minimap
 		const string screensDir = "ns2\\screens\\";
 		const string screenSrcDir = "\\src\\";
 		const float bigFontSize = 72f;
-		const float minimapFontSize = 28f;
+		const float minimapFontSize = 24f;
 		static Font bigFont = new Font (FontFamily.GenericSansSerif, bigFontSize);
 		static Font minimapFont = new Font(FontFamily.GenericSansSerif,minimapFontSize);
 
@@ -53,7 +54,7 @@ show RT,TP, locations on minimap
 
 			String map = "ns2_test";
 			String path = Environment.CurrentDirectory+"\\";
-			String font = "AgencyFB-R";
+			String font = "AgencyFB-Regular";
 			Bitmap overview;
 
 			#region parse command line args & load things
@@ -99,16 +100,18 @@ update minimap:{3}
 
 			#region check fonts
 			bool fontFound = false;
-
+			string installedFonts = "";
 			InstalledFontCollection ifc = new InstalledFontCollection ();
 			foreach (FontFamily fontfamily in ifc.Families) {
 				if (fontfamily.Name == font) {
-					bigFont = new Font (fontfamily, 96f);
-					minimapFont = new Font (fontfamily, 36f);
-					fontFound = false;
+					bigFont = new Font (fontfamily, bigFontSize);
+					minimapFont = new Font (fontfamily, minimapFontSize);
+					fontFound = true;
 				}
+				installedFonts += fontfamily.Name+"\n";
 			}
 			if (!fontFound) {
+
 				PrivateFontCollection pfc = new PrivateFontCollection ();
 
 
@@ -117,7 +120,9 @@ update minimap:{3}
 					bigFont = new Font (pfc.Families [0], bigFontSize);
 					minimapFont = new Font (pfc.Families [0], minimapFontSize);
 				} else {
-					Console.WriteLine ("Cannot find font, using defaults sorry");
+					Console.WriteLine ("Cannot find font, using default\nInstalled font list:");
+					Console.WriteLine(installedFonts);
+					Console.WriteLine();
 				}
 			}
 			#endregion
@@ -282,6 +287,8 @@ update minimap:{3}
 
 		static void AnnotateOverview (ref Bitmap overview, string file)
 		{
+			List<RectangleF> textBlocks= new List<RectangleF>();
+
 			//TODO
 			/*
 			 * to get this working we need to open the map file, get the minimap exetents, map that to the minimap.tga
@@ -333,8 +340,18 @@ update minimap:{3}
 			foreach (NS2.Tools.Entity e in lvl.Locations) {
 				vec = lvl.minimapLocation (e.Origin, overview.Width);
 				var size = g.MeasureString (e.Text,minimapFont);
-				drawString (e.Text, g, minimapFont, vec.Z-size.Width/2 + 32f , -vec.X-size.Height/2,1,0);
-				//	g.FillRectangle
+				RectangleF box = new RectangleF (vec.Z-size.Width/2+ 32, -vec.X - size.Height / 2, size.Width, size.Height);
+
+				for(int  i = 0; i <textBlocks.Count ;i++) {
+					if (textBlocks[i].IntersectsWith (box)) {
+						box.Y -= 1;
+						i = 0;
+					}
+				}
+				g.DrawRectangle (Pens.Red, box.X, box.Y, box.Width, box.Height);
+
+				drawString (e.Text, g, minimapFont, box.X, box.Y,1,0);
+				textBlocks.Add (box);
 			}
 
 			g.Flush ();
@@ -372,6 +389,7 @@ update minimap:{3}
 				g.FillPath (Brushes.Black, gp);
 			}
 			g.FillPath (Brushes.White, gp);
+
 		
 			/*g.DrawString (text, new Font(f.FontFamily, f.Size+margin), Brushes.Black, new PointF (centerx-margin, centery));
 
