@@ -19,6 +19,8 @@ namespace NS2MapLoadScreenGenerator
 {
 	class MainClass
 	{
+		const string configFile="loadscreens.ini";
+
 		public static String instructions = @" 
 Generates loading screens from and ns2 map.
 
@@ -28,13 +30,13 @@ generator.exe ns2_map_name [font] [refreshMinimap]
 TO DO:
 show RT,TP, locations on minimap
 ";
-		const string fontDir = "core\\fonts\\";
-		const string mapsDir = "ns2\\maps\\";
-		const string overviewDir= "ns2\\maps/overviews\\";
-		const string screensDir = "ns2\\screens\\";
-		const string screenSrcDir = "\\src\\";
-		const float bigFontSize = 72f;
-		const float minimapFontSize = 24f;
+		static string fontDir = "core\\fonts\\";
+		static string mapsDir = "ns2\\maps\\";
+		static string overviewDir= "ns2\\maps/overviews\\";
+		static string screensDir = "ns2\\screens\\";
+		static string screenSrcDir = "\\src\\";
+		static float bigFontSize = 72f;
+		static float minimapFontSize = 24f;
 		static Font bigFont = new Font (FontFamily.GenericSansSerif, bigFontSize);
 		static Font minimapFont = new Font(FontFamily.GenericSansSerif,minimapFontSize);
 
@@ -42,10 +44,18 @@ show RT,TP, locations on minimap
 		static int minimapyoffset = 0;
 		static int minimapsize =640;
 
+		static String tpIconPath="";
+		static String tpIconPath="";
+		static String defaultFont = "";
+
 		static Bitmap tp_icon;
-		static Bitmap rt_icon;// = new Bitmap ();
+		static Bitmap rt_icon;
 
 
+		/// <summary>
+		/// The entry point of the program, where the program control starts and ends.
+		/// </summary>
+		/// <param name="args">The command-line arguments.</param>
 		public static void Main (string[] args)
 		{
 
@@ -54,7 +64,7 @@ show RT,TP, locations on minimap
 
 			String map = "ns2_test";
 			String path = Environment.CurrentDirectory+"\\";
-			String font = "AgencyFB-Regular";
+			String font = defaultFont;
 			Bitmap overview;
 
 			#region parse command line args & load things
@@ -69,6 +79,9 @@ show RT,TP, locations on minimap
 			if(args.Length > 2){
 				refreshMinimap = args[2].ToLower() == "true" || args[2].ToLower()=="yes";
 			}
+			if( args.Length >3){
+				float.TryParse(args[3], out minimapFontSize);
+			}
 			Console.WriteLine (String.Format(@"NS2 Map Load Screen generator
 ---------------------------------
  {0}
@@ -76,11 +89,13 @@ show RT,TP, locations on minimap
 Level:{1}
 font :{2}
 update minimap:{3}
+fontSize: {4}
 ---------------------------------",
 			                                instructions, 
 			                                 map,
 			                                 font,
-			                                 refreshMinimap));
+			                                 refreshMinimap,
+			                                 minimapFontSize));
 			// if we aint got a mp no point in going forward.
 			if(map == ""){
 				return;
@@ -193,7 +208,14 @@ update minimap:{3}
 		}
 
 
-
+		/// <summary>
+		/// Creates a single loading slide
+		/// </summary>
+		/// <param name="id">Identifier.</param>
+		/// <param name="path">Path.</param>
+		/// <param name="overview">Overview.</param>
+		/// <param name="infile">Infile.</param>
+		/// <param name="mapname">Mapname.</param>
 		private static void  CreateAndSaveLoadScreen( int id, string path, ref Bitmap overview, string infile,String mapname){
 
 			//Read the file in
@@ -258,7 +280,12 @@ update minimap:{3}
 
 
 
-
+		/// <summary>
+		/// Resizes the image to match targeted sizes
+		/// </summary>
+		/// <returns>The image.</returns>
+		/// <param name="img">Image.</param>
+		/// <param name="width">Width.</param>
 		public static Bitmap resizeImage(Bitmap img, int width){
 			if (img.Width == 0) {
 				return img;
@@ -283,7 +310,11 @@ update minimap:{3}
 		}
 
 
-
+		/// <summary>
+		/// Adds things to overview
+		/// </summary>
+		/// <param name="overview">Overview.</param>
+		/// <param name="file">File.</param>
 		static void AnnotateOverview (ref Bitmap overview, string file)
 		{
 			List<RectangleF> textBlocks= new List<RectangleF>();
