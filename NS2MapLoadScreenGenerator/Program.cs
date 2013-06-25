@@ -26,10 +26,8 @@ namespace NS2MapLoadScreenGenerator
 Generates loading screens from and ns2 map.
 
 use:
-generator.exe ns2_map_name [font] [refreshMinimap]
+loadscreens.exe ns2_map_name [font] [refreshMinimap] [fontSize]
 
-TO DO:
-show RT,TP, locations on minimap
 ";
 		static string fontDir = "core\\fonts\\";
 		static string mapsDir = "ns2\\maps\\";
