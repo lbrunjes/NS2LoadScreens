@@ -190,7 +190,7 @@ fontSize: {4}
 				Console.WriteLine("Using generic screenshots");
 				toUse = Directory.GetFiles(path+screensDir,"*.jpg");
 				Randomizer r = new Randomizer ();
-				Array.Sort (toUse, r);
+				toUse = r.shuffle (toUse);
 
 			}
 			else{
