@@ -243,7 +243,7 @@ update minimap:{3}
 				Color.FromArgb (255, 0, 0, 0),
 				Color.FromArgb (0, 0, 0, 0),
 				LinearGradientMode.Vertical);
-			g.FillRectangle (gradientbrush1, 0, 0, 100, tmp.Height - 100);
+			g.FillRectangle (gradientbrush1, 0, 0, 100, tmp.Height);
 			g.FillRectangle (gradientbrush2, tmp.Width-150, 0, 150, tmp.Height);
 			g.FillRectangle (gradientbrush3, 0, 0, tmp.Width, 50);
 			g.Flush ();
