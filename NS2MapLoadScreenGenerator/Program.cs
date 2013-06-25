@@ -19,6 +19,7 @@ namespace NS2MapLoadScreenGenerator
 {
 	class MainClass
 	{
+		#region varaibles
 		const string configFile="loadscreens.ini";
 
 		public static String instructions = @" 
@@ -43,14 +44,18 @@ show RT,TP, locations on minimap
 		static int minimapxoffset = 1120;
 		static int minimapyoffset = 0;
 		static int minimapsize =640;
+		static int bigTextX = 640;
+		static int bigTextY = 64;
 
 		static String tpIconPath="";
-		static String tpIconPath="";
+		static String rpIconPath="";
 		static String defaultFont = "";
+		static bool refreshMinimap = false;
+
 
 		static Bitmap tp_icon;
 		static Bitmap rt_icon;
-
+		#endregion
 
 		/// <summary>
 		/// The entry point of the program, where the program control starts and ends.
@@ -58,9 +63,9 @@ show RT,TP, locations on minimap
 		/// <param name="args">The command-line arguments.</param>
 		public static void Main (string[] args)
 		{
+			//Read config file
+			ReadConfigFile ();
 
-
-			bool refreshMinimap = false;
 
 			String map = "ns2_test";
 			String path = Environment.CurrentDirectory+"\\";
@@ -73,7 +78,7 @@ show RT,TP, locations on minimap
 			}
 
 			if (args.Length > 1) {
-				font= args[1];
+				font= args[1].ToLower();
 			}
 
 			if(args.Length > 2){
@@ -118,7 +123,7 @@ fontSize: {4}
 			string installedFonts = "";
 			InstalledFontCollection ifc = new InstalledFontCollection ();
 			foreach (FontFamily fontfamily in ifc.Families) {
-				if (fontfamily.Name == font) {
+				if (fontfamily.Name.ToLower() == font) {
 					bigFont = new Font (fontfamily, bigFontSize);
 					minimapFont = new Font (fontfamily, minimapFontSize);
 					fontFound = true;
@@ -344,7 +349,18 @@ fontSize: {4}
 			g.TranslateTransform (overview.Width/2f , overview.Height/2f);
 			g.RotateTransform (-90f);
 
-			//Console.WriteLine ("Scale:"+(overview.Width/lvl.minimap_extents.Scale.X));
+			Console.WriteLine ("Scale:"+(overview.Width/lvl.minimap_extents.Scale.X)+"\n"+overview.Height/lvl.minimap_extents.Scale.Z); 
+
+			//ahhhh
+			if(Math.Abs(lvl.minimap_extents.Scale.X - lvl.minimap_extents.Scale.Z) > 10){
+				if(lvl.minimap_extents.Scale.Z >lvl.minimap_extents.Scale.X){
+					g.ScaleTransform(lvl.minimap_extents.Scale.X/lvl.minimap_extents.Scale.Z,1);
+				}
+				else{
+					g.ScaleTransform(1,lvl.minimap_extents.Scale.Z/lvl.minimap_extents.Scale.X);
+				}
+			}
+
 
 			NS2.Tools.Vector3 vec;
 			g.CompositingMode = System.Drawing.Drawing2D.CompositingMode.SourceOver;
@@ -428,7 +444,7 @@ fontSize: {4}
 
 
 		/// <summary>
-		/// Draws the string to teh graphics context with an outline.
+		/// Draws the string using ana outline and supposts basic eeffects
 		/// </summary>
 		/// <param name="text">Text.</param>
 		/// <param name="g">The green component.</param>
@@ -436,6 +452,7 @@ fontSize: {4}
 		/// <param name="centerx">Centerx.</param>
 		/// <param name="centery">Centery.</param>
 		/// <param name="margin">Margin.</param>
+		/// <param name="glowWidth">Glow width.</param>
 		public static  void drawString(String text, Graphics g, Font f, float centerx, float centery, float margin, float glowWidth){
 			float scalingfortext = 395f / 300f;
 			g.SmoothingMode = SmoothingMode.AntiAlias;
@@ -466,5 +483,92 @@ fontSize: {4}
 
 
 		}
+
+		static void ReadConfigFile ()
+		{
+			string key = "";
+			string data = "";
+			String[] configData=null;
+			int idx;
+			try{
+			 configData = File.ReadAllLines (configFile);
+			}
+			catch(Exception ex){
+				Console.WriteLine ("WARNING: cannot load config, "+ex.Message+", using defaults");
+				return;
+			}
+			foreach (String line in configData) {
+				idx = line.IndexOf ("#");
+				if ( idx>= 0) {
+					key = line.Substring(0, idx);
+				}
+				idx = key.IndexOf ("=");
+				if (key.Length > 3 & idx >= 0) {
+					data = key.Substring (idx+1).Trim();
+
+					key = key.Substring (0, idx).Trim().ToLower();
+					ProcessConfig(key,data);
+				}
+
+			}
+		}
+
+		static void ProcessConfig(string key, string data){
+			//TODO data validation?
+			switch(key){
+			case "fontdir":
+				fontDir = data;
+				break;
+			case "mapsdir":
+				mapsDir = data;
+				break;
+			case "overviewdir":
+				overviewDir = data;
+				break;
+			case "screensdir":
+				screensDir = data;
+				break;
+			case "screensrcdir":
+				screenSrcDir = data;
+				break;
+			case "bigfontsize":
+				float.TryParse (data, out bigFontSize);
+				break;
+			case "minimapfontsize":
+				float.TryParse (data, out minimapFontSize);
+				break;
+			case "icon_tp":
+				tpIconPath = data;
+				break;
+			case "icon_rp":
+				rpIconPath = data;
+				break;
+			case "refreshminimap":
+				refreshMinimap = data == "true";
+				break;
+			case "minimapxoffset":
+				int.TryParse (data, out minimapxoffset);
+				break;
+			case "minimapyoffset":
+				int.TryParse (data, out minimapyoffset);
+				break;
+			case "minimapsize":
+				int.TryParse (data, out minimapsize);
+				break;
+			case "bigtexty":
+				int.TryParse (data, out bigTextY);
+				break;
+			case "bigtextx":
+				int.TryParse (data, out bigTextX);
+				break;
+			default:
+				Console.WriteLine ("Invalid Config key: "+key);
+				break;
+
+
+			}
+
+		}
+
 	}
 }
