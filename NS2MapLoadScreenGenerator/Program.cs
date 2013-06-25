@@ -189,6 +189,9 @@ fontSize: {4}
 			if(!Directory.Exists(path+screensDir+map+screenSrcDir)){
 				Console.WriteLine("Using generic screenshots");
 				toUse = Directory.GetFiles(path+screensDir,"*.jpg");
+				Randomizer r = new Randomizer ();
+				Array.Sort (toUse, r);
+
 			}
 			else{
 				toUse = Directory.GetFiles(path+screensDir+map+screenSrcDir,"*.jpg");
